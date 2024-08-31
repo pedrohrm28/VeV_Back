@@ -4,10 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Criar Chave Pix</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function() {
-            $('#criarChaveBtn').click(function() {
-                const chavePix = $('#chavePix').val();
+            $('#criarChaveBtn').click(function(event) {
+                event.preventDefault(); 
+
+                const chavePix = $('#create-pix-key').val();
                 
                 $.ajax({
                     url: 'http://127.0.0.1:5000/criar_chave_pix',
@@ -15,10 +18,12 @@
                     contentType: 'application/json',
                     data: JSON.stringify({ chave: chavePix }),
                     success: function(response) {
-                        $('#resultado').text(response.message);
+                        $('#message').text(response.message);
+                        $('#message').css('color', 'green'); 
                     },
                     error: function(response) {
-                        $('#resultado').text(response.responseJSON.message);
+                        $('#message').text(response.responseJSON.message);
+                        $('#message').css('color', 'red'); 
                     }
                 });
             });
@@ -31,7 +36,7 @@
     <form id="create-pix-form">
         <label for="create-pix-key">Chave Pix:</label>
         <input type="text" id="create-pix-key" name="key" required>
-        <button type="submit">Criar Chave</button>
+        <button id="criarChaveBtn" type="button">Criar Chave</button>
     </form>
     <p id="message"></p>
 </body>

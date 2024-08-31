@@ -1,13 +1,17 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from urllib.parse import quote as url_quote
-
+from datetime import datetime
 
 app = Flask(__name__)
 CORS(app)
 
 # Dados simulados (em um sistema real, isso estaria em um banco de dados)
 pix_keys = {}
+users = {}
+transactions = {}
+
+# Limite diário (por exemplo, R$ 1000.00)
+DAILY_LIMIT = 1000.00
 
 @app.route('/criar_chave_pix', methods=['POST'])
 def criar_chave_pix():
@@ -15,6 +19,7 @@ def criar_chave_pix():
     if chave in pix_keys:
         return jsonify({"message": "Chave Pix já existe!"}), 400
     pix_keys[chave] = {"valor": 0.0}
+    transactions[chave] = []  
     return jsonify({"message": "Chave Pix criada com sucesso!"}), 201
 
 @app.route('/validar_chave_pix', methods=['POST'])
@@ -43,8 +48,62 @@ def realizar_pix():
 
     # Simula a operação de Pix
     pix_keys[chave]["valor"] += valor
-    return jsonify({"message": "Pix realizado com sucesso!", "chave": chave, "valor": valor}), 200
+    formatted_value = f"{valor:.2f}"  
+    transactions[chave].append({"valor": formatted_value, "operacao": "entrada", "data": datetime.now().isoformat()})  # Registra a transação
+    return jsonify({"message": "Pix realizado com sucesso!", "chave": chave, "valor": formatted_value}), 200
+
+@app.route('/login', methods=['POST'])
+def login():
+    username = request.json.get('username')
+    password = request.json.get('password')
+
+    if username in users and users[username] == password:
+        return jsonify({"message": "Login bem-sucedido!"}), 200
+    return jsonify({"message": "Usuário ou senha inválidos!"}), 401
+
+@app.route('/register', methods=['POST'])
+def register():
+    username = request.json.get('username')
+    password = request.json.get('password')
+
+    if username in users:
+        return jsonify({"message": "Usuário já existe!"}), 400
+
+    # Adiciona o novo usuário
+    users[username] = password
+    return jsonify({"message": "Cadastro bem-sucedido!"}), 201
+
+@app.route('/extrato', methods=['POST'])
+def extrato():
+    chave = request.json.get('chave')
+    if chave not in transactions:
+        return jsonify({"message": "Chave Pix não encontrada!"}), 404
+    
+    return jsonify({"transacoes": transactions[chave]}), 200
+
+@app.route('/verificar_limite_diario', methods=['GET'])
+def verificar_limite_diario():
+    chave = request.args.get('chave')
+    if chave not in transactions:
+        return jsonify({"message": "Chave Pix não encontrada!"}), 404
+
+    hoje = datetime.now().date()
+    total_diario = 0.0
+    
+    for transacao in transactions[chave]:
+        data_transacao = datetime.fromisoformat(transacao["data"]).date()
+        if data_transacao == hoje:
+            total_diario += float(transacao["valor"])
+
+    limite_maximo = DAILY_LIMIT
+    excedido = total_diario > limite_maximo
+    
+    return jsonify({
+        "total_diario": total_diario,
+        "limite_maximo": limite_maximo,
+        "excedido": excedido,
+        "message": "Limite diário verificado com sucesso!"
+    }), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
-

@@ -115,3 +115,25 @@ form a {
 form a:hover {
     text-decoration: underline;
 }
+.button-link {
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 10px 0;
+    background-color: #810be1c3;
+    color: #fff;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 4px;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.button-link:hover {
+    background-color: #4b0082;
+}
+h2 {
+    color: #eeeaf0; 
+    text-decoration: none;
+}
+

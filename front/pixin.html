@@ -4,22 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pagar com Pix</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function() {
-            $('#realizarPixBtn').click(function() {
-                const chavePix = $('#chavePix').val();
-                const valorPix = parseFloat($('#valorPix').val());
-                
+            $('#pay-pix-form').submit(function(event) {
+                event.preventDefault(); 
+
+                const chavePix = $('#pay-pix-key').val();
+                const valorPix = parseFloat($('#pay-pix-amount').val());
+
                 $.ajax({
                     url: 'http://127.0.0.1:5000/realizar_pix',
                     type: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify({ chave: chavePix, valor: valorPix }),
                     success: function(response) {
-                        $('#resultado').text(response.message + " - Chave: " + response.chave + ", Valor: " + response.valor);
+                        $('#message').text(response.message + " - Chave: " + response.chave + ", Valor: " + response.valor);
+                        $('#message').css('color', 'green'); 
                     },
                     error: function(response) {
-                        $('#resultado').text(response.responseJSON.message);
+                        $('#message').text(response.responseJSON.message);
+                        $('#message').css('color', 'red'); 
                     }
                 });
             });
