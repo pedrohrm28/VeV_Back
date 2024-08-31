@@ -20,7 +20,12 @@
                     data: JSON.stringify({ chave: chavePix, valor: valorPix }),
                     success: function(response) {
                         $('#message').text(response.message + " - Chave: " + response.chave + ", Valor: " + response.valor);
-                        $('#message').css('color', 'green'); 
+                        $('#message').css('color', 'green');
+                        
+                        // Redireciona após 2 segundos para garantir que a mensagem de sucesso seja visível
+                        setTimeout(function() {
+                            window.location.href = 'index.html';
+                        }, 2000);
                     },
                     error: function(response) {
                         $('#message').text(response.responseJSON.message);

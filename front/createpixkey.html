@@ -8,7 +8,7 @@
     <script>
         $(document).ready(function() {
             $('#criarChaveBtn').click(function(event) {
-                event.preventDefault(); 
+                event.preventDefault(); // Evita o recarregamento da página
 
                 const chavePix = $('#create-pix-key').val();
                 
@@ -19,11 +19,15 @@
                     data: JSON.stringify({ chave: chavePix }),
                     success: function(response) {
                         $('#message').text(response.message);
-                        $('#message').css('color', 'green'); 
+                        $('#message').css('color', 'green');
+                        // Redireciona após 2 segundos para garantir que a mensagem de sucesso seja visível
+                        setTimeout(function() {
+                            window.location.href = 'index.html';
+                        }, 2000);
                     },
                     error: function(response) {
                         $('#message').text(response.responseJSON.message);
-                        $('#message').css('color', 'red'); 
+                        $('#message').css('color', 'red');
                     }
                 });
             });

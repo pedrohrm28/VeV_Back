@@ -46,6 +46,21 @@ def realizar_pix():
     if valor <= 0:
         return jsonify({"message": "Valor do Pix inválido!"}), 400
 
+    # Verifica o limite diário
+    hoje = datetime.now().date()
+    total_diario = 0.0
+    
+    for transacao in transactions[chave]:
+        data_transacao = datetime.fromisoformat(transacao["data"]).date()
+        if data_transacao == hoje:
+            total_diario += float(transacao["valor"])
+
+    if total_diario + valor > DAILY_LIMIT:
+        excedente = (total_diario + valor) - DAILY_LIMIT
+        return jsonify({
+            "message": f"Limite diário excedido! Você tentou transferir R${valor:.2f}, mas o limite diário é R${DAILY_LIMIT:.2f}. Excesso: R${excedente:.2f}."
+        }), 400
+
     # Simula a operação de Pix
     pix_keys[chave]["valor"] += valor
     formatted_value = f"{valor:.2f}"  
