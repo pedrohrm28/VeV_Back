@@ -4,7 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Criar Chave Pix</title>
-    <script defer src="script.js"></script><!--Quando for criar a logica no Js-->
+    <script>
+        $(document).ready(function() {
+            $('#criarChaveBtn').click(function() {
+                const chavePix = $('#chavePix').val();
+                
+                $.ajax({
+                    url: 'http://127.0.0.1:5000/criar_chave_pix',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ chave: chavePix }),
+                    success: function(response) {
+                        $('#resultado').text(response.message);
+                    },
+                    error: function(response) {
+                        $('#resultado').text(response.responseJSON.message);
+                    }
+                });
+            });
+        });
+    </script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
