@@ -21,19 +21,19 @@
                     success: function(response, textStatus, jqXHR) {
                         $('#message').text(response.message);
 
-                        // Usando jqXHR.status para obter o status HTTP
+                        
                         if (jqXHR.status === 200 || jqXHR.status === 201) {
-                            $('#message').css('color', 'green'); // Verde para sucesso
+                            $('#message').css('color', 'green'); 
                             setTimeout(function() {
-                                window.location.href = 'login.html'; // Redireciona após 3 segundos
+                                window.location.href = 'login.html'; 
                             }, 3000);
                         } else {
-                            $('#message').css('color', 'red'); // Vermelho para erro
+                            $('#message').css('color', 'red'); 
                         }
                     },
                     error: function(response) {
                         $('#message').text(response.responseJSON.message);
-                        $('#message').css('color', 'red'); // Vermelho para erro
+                        $('#message').css('color', 'red'); 
                     }
                 });
             });
