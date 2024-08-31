@@ -18,21 +18,22 @@
                     type: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify({ username: username, password: password }),
-                    success: function(response) {
+                    success: function(response, textStatus, jqXHR) {
                         $('#message').text(response.message);
-                        
-                        $('#message').css('color', response.status === 200 || response.status === 201 ? 'green' : 'red');
-                        
-                        setTimeout(function() {
-                            if (response.status === 200 || response.status === 201) {
-                                window.location.href = 'login.html';
-                            }
-                        }, 3000);
+
+                        // Usando jqXHR.status para obter o status HTTP
+                        if (jqXHR.status === 200 || jqXHR.status === 201) {
+                            $('#message').css('color', 'green'); // Verde para sucesso
+                            setTimeout(function() {
+                                window.location.href = 'login.html'; // Redireciona após 3 segundos
+                            }, 3000);
+                        } else {
+                            $('#message').css('color', 'red'); // Vermelho para erro
+                        }
                     },
                     error: function(response) {
                         $('#message').text(response.responseJSON.message);
-                        
-                        $('#message').css('color', 'red');
+                        $('#message').css('color', 'red'); // Vermelho para erro
                     }
                 });
             });
@@ -53,6 +54,5 @@
     <p style="color: white;">
         Já tem uma conta? <a href="login.html" style="color: white;">Faça o Login</a>
     </p>
-    
 </body>
 </html>
