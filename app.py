@@ -46,14 +46,19 @@ def realizar_pix():
     if valor <= 0:
         return jsonify({"message": "Valor do Pix inválido!"}), 400
 
+    try:
+        valor = float(valor)  # Garantir que o valor seja um número de ponto flutuante
+    except ValueError:
+        return jsonify({"message": "Valor do Pix deve ser um número!"}), 400
+
     # Verifica o limite diário
     hoje = datetime.now().date()
     total_diario = 0.0
-    
+
     for transacao in transactions[chave]:
         data_transacao = datetime.fromisoformat(transacao["data"]).date()
         if data_transacao == hoje:
-            total_diario += float(transacao["valor"])
+            total_diario += float(transacao["valor"])  # Garantir que a comparação é feita com números
 
     if total_diario + valor > DAILY_LIMIT:
         excedente = (total_diario + valor) - DAILY_LIMIT
@@ -63,7 +68,7 @@ def realizar_pix():
 
     # Simula a operação de Pix
     pix_keys[chave]["valor"] += valor
-    formatted_value = f"{valor:.2f}"  
+    formatted_value = f"{valor:.2f}"
     transactions[chave].append({"valor": formatted_value, "operacao": "entrada", "data": datetime.now().isoformat()})  # Registra a transação
     return jsonify({"message": "Pix realizado com sucesso!", "chave": chave, "valor": formatted_value}), 200
 
