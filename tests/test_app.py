@@ -4,7 +4,6 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.action_chains import ActionChains
 from webdriver_manager.chrome import ChromeDriverManager
 import time
 
@@ -12,7 +11,6 @@ import time
 chrome_options = Options()
 # chrome_options.add_argument("--headless")  # Executa o navegador em modo headless
 
-# Configure o ChromeDriver usando o webdriver-manager
 driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
 
 # Função de teste para registro
@@ -83,42 +81,23 @@ def test_create_pix_key():
 
     driver.get('file:///c:/Users/rayan/Downloads/VeV_Back/front/index.html')
     time.sleep(4)
-
+    
 def test_make_pix_transaction():
     driver.get('file:///C:/Users/rayan/Downloads/VeV_Back/front/pixin.html')
 
-    time.sleep(5)  # Adiciona um atraso para garantir que a página carregue completamente
-
     try:
-        # Verifique se há iFrames e mude o contexto se necessário
-        frames = driver.find_elements(By.TAG_NAME, 'iframe')
-        if frames:
-            driver.switch_to.frame(frames[0])
-
-        # Use WebDriverWait para aguardar a visibilidade dos campos de entrada e do botão
-        pix_key_input = WebDriverWait(driver, 20).until(
-            EC.visibility_of_element_located((By.ID, 'pix-key'))
+        # Use WebDriverWait para garantir que os elementos estejam visíveis e interativos
+        pix_key_input = WebDriverWait(driver, 15).until(
+            EC.visibility_of_element_located((By.ID, 'pay-pix-key'))
         )
-        value_input = WebDriverWait(driver, 20).until(
-            EC.visibility_of_element_located((By.ID, 'pix-value'))
-        )
-        transfer_button = WebDriverWait(driver, 20).until(
-            EC.element_to_be_clickable((By.ID, 'pix-transfer-btn'))
+        value_input = WebDriverWait(driver, 15).until(
+            EC.visibility_of_element_located((By.ID, 'pay-pix-amount'))
         )
 
-        # Verifique a visibilidade e o estado dos campos
-        print(f"Pix key input visible: {pix_key_input.is_displayed()}")
-        print(f"Value input visible: {value_input.is_displayed()}")
-        print(f"Pix key input enabled: {pix_key_input.is_enabled()}")
-        print(f"Value input enabled: {value_input.is_enabled()}")
+        # Use JavaScript para definir os valores dos campos
+        driver.execute_script("arguments[0].value = arguments[1];", pix_key_input, '1234567890')
+        driver.execute_script("arguments[0].value = arguments[1];", value_input, '1000.00')
 
-        # Preencher os campos diretamente
-        pix_key_input.clear()
-        pix_key_input.send_keys('1234567890')
-        
-        value_input.clear()
-        value_input.send_keys('100.00')
-        
         # Verifique se os valores foram definidos corretamente
         print(f"Pix key value set to: {pix_key_input.get_attribute('value')}")
         print(f"Value input set to: {value_input.get_attribute('value')}")
@@ -126,7 +105,13 @@ def test_make_pix_transaction():
         # Adicione um atraso antes de clicar no botão
         time.sleep(2)
 
-        transfer_button.click()
+        # Use WebDriverWait para garantir que o botão esteja clicável
+        transfer_button = WebDriverWait(driver, 15).until(
+            EC.element_to_be_clickable((By.XPATH, '//button[@type="submit"]'))
+        )
+
+       
+        driver.execute_script("arguments[0].click();", transfer_button)
         print("Transfer button clicked.")
 
         # Aguarde até que a confirmação de transação seja visível
@@ -134,29 +119,107 @@ def test_make_pix_transaction():
             EC.text_to_be_present_in_element((By.ID, 'message'), 'Pix realizado com sucesso!')
         )
         print("Pix transaction test passed!")
+        time.sleep(3)
 
-        # Volte para o contexto principal se você estava em um frame
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        driver.save_screenshot('error_screenshot.png')  
+
+        
+        with open('page_source.html', 'w', encoding='utf-8') as f:
+            f.write(driver.page_source)
+
+    finally:
+       
         driver.switch_to.default_content()
+
+      
+        driver.get('file:///C:/Users/rayan/Downloads/VeV_Back/front/index.html')
+        time.sleep(4)
+ 
+def test_extrato():
+    driver.get('file:///c:/Users/rayan/Downloads/VeV_Back/front/extrato.html')
+
+    try:
+        # Espera até que o campo da chave Pix esteja visível e interativo
+        pix_key_input = WebDriverWait(driver, 15).until(
+            EC.visibility_of_element_located((By.ID, 'extrato-pix-key'))
+        )
+        # Espera até que o botão de extrato esteja clicável
+        submit_button = WebDriverWait(driver, 15).until(
+            EC.element_to_be_clickable((By.ID, 'extratoBtn'))
+        )
+
+        # Preenche a chave Pix
+        pix_key_input.clear()
+        pix_key_input.send_keys('1234567890')
+
+        # Clica no botão para obter o extrato
+        submit_button.click()
+
+        # Aguarda até que a resposta do extrato seja visível
+        WebDriverWait(driver, 15).until(
+            EC.text_to_be_present_in_element((By.ID, 'extrato-message'), 'Transações:')
+        )
+
+        # Verifica o conteúdo do extrato
+        message_element = driver.find_element(By.ID, 'extrato-message')
+        print(message_element.text)
+        assert 'Transações:' in message_element.text
+        print("Extrato test passed!")
+        time.sleep(5)
 
     except Exception as e:
         print(f"An error occurred: {e}")
         driver.save_screenshot('error_screenshot.png')  # Salva uma captura de tela para depuração
 
-        # Salvar o HTML da página para análise
+        # Salva o HTML da página para análise
         with open('page_source.html', 'w', encoding='utf-8') as f:
             f.write(driver.page_source)
 
-    # Voltar para a tela de index
-    driver.get('file:///C:/Users/rayan/Downloads/VeV_Back/front/index.html')
-    time.sleep(4)
+    finally:
+        
+        driver.get('file:///c:/Users/rayan/Downloads/VeV_Back/front/index.html')
+        time.sleep(4)
 
+def test_check_daily_limit():
+    driver.get('file:///c:/Users/rayan/Downloads/VeV_Back/front/checklimit.html')
+
+    pix_key_input = WebDriverWait(driver, 15).until(
+        EC.visibility_of_element_located((By.ID, 'pix-key'))
+    )
+    submit_button = WebDriverWait(driver, 15).until(
+        EC.element_to_be_clickable((By.XPATH, '//button[@type="submit"]'))
+    )
+
+    # Defina a chave Pix que será usada para o teste
+    pix_key = '1234567890'
+    
+    pix_key_input.clear()
+    pix_key_input.send_keys(pix_key)
+    submit_button.click()
+
+    # Aguarde a resposta e verifique se a mensagem correta é exibida
+    WebDriverWait(driver, 15).until(
+        EC.text_to_be_present_in_element((By.ID, 'daily-limit-message'), 'Limite diário')
+    )
+    
+    message_element = driver.find_element(By.ID, 'daily-limit-message')
+    print(message_element.text)
+    assert 'Limite diário' in message_element.text
+    print("Daily limit check test passed!")
+
+    time.sleep(5)
+       
 
 # Executar os testes
 if __name__ == '__main__':
     try:
-        test_register()          # Primeiro executa o teste de registro
-        test_login()            # Depois executa o teste de login
-        test_create_pix_key()   # Em seguida, executa o teste de criação de chave Pix
-        test_make_pix_transaction()  # Finalmente, executa o teste de transação Pix
+        test_register()         
+        test_login()           
+        test_create_pix_key()   
+        test_make_pix_transaction()  
+        test_extrato()
+        test_check_daily_limit()
     finally:
-        driver.quit()  # Garante que o driver seja encerrado mesmo se um erro ocorrer
+        driver.quit()  
