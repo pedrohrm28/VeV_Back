@@ -211,6 +211,47 @@ def test_check_daily_limit():
 
     time.sleep(5)
        
+def test_define_limit():
+    driver.get('file://C:\Users\levii\OneDrive\Área de Trabalho\trabalho VeV\back_VeV\VeV_Back\front\dailyLimit.html')
+
+    try:
+        # Localiza o campo da chave Pix e o valor do novo limite
+        pix_key_input = WebDriverWait(driver, 15).until(
+            EC.visibility_of_element_located((By.ID, 'pix-key'))
+        )
+        limit_input = WebDriverWait(driver, 15).until(
+            EC.visibility_of_element_located((By.ID, 'novo-limite'))
+        )
+
+        # Preenche a chave Pix e o novo limite
+        pix_key_input.send_keys('1234567890')
+        limit_input.send_keys('500.00')
+
+        # Clica no botão para definir o limite
+        submit_button = WebDriverWait(driver, 15).until(
+            EC.element_to_be_clickable((By.XPATH, '//button[@type="submit"]'))
+        )
+        submit_button.click()
+
+        # Aguarda até que a mensagem de sucesso seja exibida
+        WebDriverWait(driver, 15).until(
+            EC.text_to_be_present_in_element((By.ID, 'limit-message'), 'Limite diário definido como')
+        )
+
+        message_element = driver.find_element(By.ID, 'limit-message')
+        print(message_element.text)
+        assert 'Limite diário definido como' in message_element.text
+        print("Define daily limit test passed!")
+
+        time.sleep(3)
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        driver.save_screenshot('error_screenshot_define_limit.png')  # Salva uma captura de tela para depuração
+
+        # Salva o HTML da página para análise
+        with open('page_source_define_limit.html', 'w', encoding='utf-8') as f:
+            f.write(driver.page_source)
 
 # Executar os testes
 if __name__ == '__main__':
@@ -221,5 +262,6 @@ if __name__ == '__main__':
         test_make_pix_transaction()  
         test_extrato()
         test_check_daily_limit()
+        test_define_limit()  
     finally:
         driver.quit()  

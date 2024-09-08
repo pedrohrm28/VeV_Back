@@ -9,6 +9,7 @@ CORS(app)
 pix_keys = {}
 users = {}
 transactions = {}
+user_limits = {}
 
 # Limite diário (por exemplo, R$ 1000.00)
 DAILY_LIMIT = 1000.00
@@ -60,6 +61,9 @@ def realizar_pix():
         if data_transacao == hoje:
             total_diario += float(transacao["valor"])  # Garantir que a comparação é feita com números
 
+    # Verifica se o usuário tem um limite personalizado, caso contrário, usa o limite padrão
+    limite_maximo = user_limits.get(chave, DAILY_LIMIT)
+
     if total_diario + valor > DAILY_LIMIT:
         excedente = (total_diario + valor) - DAILY_LIMIT
         return jsonify({
@@ -101,6 +105,26 @@ def extrato():
     
     return jsonify({"transacoes": transactions[chave]}), 200
 
+@app.route('/definir_limite_diario', methods=['POST'])
+def definir_limite_diario():
+    chave = request.json.get('chave')
+    novo_limite = request.json.get('novo_limite')
+
+    if chave not in transactions:
+        return jsonify({"message": "Chave Pix não encontrada!"}), 404
+
+    try:
+        novo_limite = float(novo_limite)
+        if novo_limite <= 0:
+            return jsonify({"message": "Limite diário inválido!"}), 400
+
+        # Define o novo limite diário personalizado para a chave Pix
+        user_limits[chave] = novo_limite
+        return jsonify({"message": f"Limite diário definido como R${novo_limite:.2f} com sucesso!"}), 200
+
+    except ValueError:
+        return jsonify({"message": "Limite deve ser um número!"}), 400
+
 @app.route('/verificar_limite_diario', methods=['GET'])
 def verificar_limite_diario():
     chave = request.args.get('chave')
@@ -109,15 +133,16 @@ def verificar_limite_diario():
 
     hoje = datetime.now().date()
     total_diario = 0.0
-    
+
     for transacao in transactions[chave]:
         data_transacao = datetime.fromisoformat(transacao["data"]).date()
         if data_transacao == hoje:
             total_diario += float(transacao["valor"])
 
-    limite_maximo = DAILY_LIMIT
+    # Verifica se há um limite personalizado, senão usa o limite padrão
+    limite_maximo = user_limits.get(chave, DAILY_LIMIT)
     excedido = total_diario > limite_maximo
-    
+
     return jsonify({
         "total_diario": total_diario,
         "limite_maximo": limite_maximo,
